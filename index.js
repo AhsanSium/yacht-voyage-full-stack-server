@@ -31,6 +31,10 @@ client.connect(err => {
 
     const adminCollection = client.db(`${process.env.DB_NAME}`).collection("admins");
 
+    const newsLetterCollection = client.db(`${process.env.DB_NAME}`).collection("newsLetter");
+
+    const addContactCollection = client.db(`${process.env.DB_NAME}`).collection("addContact");
+
     console.log('MongoDB Connected');
 
     app.get('/yachts', (req, res) => {
@@ -52,14 +56,12 @@ client.connect(err => {
         console.log(id);
         yachtsCollection.find({ _id: ObjectId(id) })
             .toArray((err, document) => {
-                console.log(document);
                 res.send(document[0]);
             })
     })
 
     app.post('/bookYacht', (req, res) => {
         const book = req.body;
-        console.log(book);
         bookingCollection.insertOne(book)
             .then(result => {
                 res.send(result.insertedCount > 0);
@@ -83,7 +85,7 @@ client.connect(err => {
         let image = {
             contentType: file.mimetype,
             size: file.size,
-            img: Buffer.form(encImg, 'base64')
+            img: Buffer(encImg, 'base64')
         };
         yachtsCollection.insertOne({ name, location, price, speed, people, bed, image })
             .then(result => {
@@ -103,8 +105,6 @@ client.connect(err => {
 
         const filePath = `${__dirname}/customer/${file.name}`;
 
-        console.log('adding Review', file, name, description, rating);
-
         file.mv(filePath, err => {
             if (err) {
                 console.log(err);
@@ -120,7 +120,6 @@ client.connect(err => {
             };
             reviewCollection.insertOne({ name, description, rating, image })
                 .then(result => {
-                    console.log('Inserted Count', result.insertedCount)
 
                     fs.remove(filePath, err => {
                         if (err) {
@@ -141,7 +140,6 @@ client.connect(err => {
         bookingCollection.find({ email: req.query.email })
             .toArray((err, documents) => {
                 res.status(200).send(documents);
-                console.log(documents);
             })
 
     })
@@ -151,22 +149,53 @@ client.connect(err => {
         bookingCollection.find()
             .toArray((err, documents) => {
                 res.status(200).send(documents);
-                console.log(documents);
             })
+
+    })
+
+    app.post('/updateStatus', (req, res) => {
+
+        const id = req.body.id;
+        const status = req.body.status;
+        
+        const newValue = { $set: { status: status } };
+        var myQuery = { _id: ObjectId(id) };
+
+        bookingCollection.updateOne(myQuery, newValue)
+        .then(result => {
+            res.send(res.modifiedCount > 0);
+        })
+        .catch((err) => {
+            console.log('Error: ' + err);
+       })
 
     })
 
     app.delete('/delete/:id', (req, res) => {
         yachtsCollection.deleteOne({ _id: ObjectId(req.params.id) })
             .then(result => {
-                console.log(result);
                 res.send(res.deletedCount > 0);
+            })
+    })
+
+    app.post('/addNewsLetter', (req, res) => {
+        const email = req.body;
+        newsLetterCollection.insertOne(email)
+            .then(result => {
+                res.send(result.insertedCount > 0);
+            })
+    })
+
+    app.post('/addContact', (req, res) => {
+        const data = req.body;
+        addContactCollection.insertOne(data)
+            .then(result => {
+                res.send(result.insertedCount > 0);
             })
     })
 
     app.post('/addAdmin', (req, res) => {
         const email = req.body;
-        console.log(email);
         adminCollection.insertOne(email)
             .then(result => {
                 res.send(result.insertedCount > 0);
