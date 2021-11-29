@@ -8,7 +8,11 @@ const ObjectId = require('mongodb').ObjectID;
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+// app.use(cors());
+var corsOptions = {
+    origin: 'https://yachts-voyage.firebaseapp.com',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204 
+}
 
 app.use(express.static('yachts'));
 app.use(express.static('customer'));
@@ -35,32 +39,32 @@ client.connect(err => {
 
     const addContactCollection = client.db(`${process.env.DB_NAME}`).collection("addContact");
 
-    console.log('MongoDB Connected');
+    //console.log('MongoDB Connected');
 
-    app.get('/yachts', (req, res) => {
+    app.get('/yachts',cors(corsOptions), (req, res) => {
         yachtsCollection.find({})
             .toArray((err, documents) => {
                 res.send(documents);
             })
     })
 
-    app.get('/customer-reviews', (req, res) => {
+    app.get('/customer-reviews',cors(corsOptions), (req, res) => {
         reviewCollection.find({})
             .toArray((err, documents) => {
                 res.send(documents);
             })
     })
 
-    app.get('/yachtById/:id', (req, res) => {
+    app.get('/yachtById/:id',cors(corsOptions), (req, res) => {
         const id = req.params.id;
-        console.log(id);
+        //console.log(id);
         yachtsCollection.find({ _id: ObjectId(id) })
             .toArray((err, document) => {
                 res.send(document[0]);
             })
     })
 
-    app.post('/bookYacht', (req, res) => {
+    app.post('/bookYacht',cors(corsOptions), (req, res) => {
         const book = req.body;
         bookingCollection.insertOne(book)
             .then(result => {
@@ -68,7 +72,7 @@ client.connect(err => {
             })
     })
 
-    app.post('/addYacht', (req, res) => {
+    app.post('/addYacht',cors(corsOptions), (req, res) => {
         // const newYacht = req.files.image;
         const file = req.files.file;
         const name = req.body.name;
@@ -78,7 +82,7 @@ client.connect(err => {
         const people = req.body.people;
         const bed = req.body.bed;
 
-        console.log('adding Product', file, name, location, price, speed, people, bed);
+        // console.log('adding Product', file, name, location, price, speed, people, bed);
 
         let newImg = file.data;
         const encImg = newImg.toString('base64');
@@ -96,7 +100,7 @@ client.connect(err => {
 
     })
 
-    app.post('/addReview', (req, res) => {
+    app.post('/addReview',cors(corsOptions), (req, res) => {
         // const newYacht = req.files.image;
         const file = req.files.file;
         const name = req.body.name;
@@ -133,7 +137,7 @@ client.connect(err => {
 
     })
 
-    app.get('/bookings', (req, res) => {
+    app.get('/bookings',cors(corsOptions), (req, res) => {
 
         console.log(req.query.email);
 
@@ -144,7 +148,7 @@ client.connect(err => {
 
     })
 
-    app.get('/allBookings', (req, res) => {
+    app.get('/allBookings',cors(corsOptions), (req, res) => {
 
         bookingCollection.find()
             .toArray((err, documents) => {
@@ -153,7 +157,7 @@ client.connect(err => {
 
     })
 
-    app.post('/updateStatus', (req, res) => {
+    app.post('/updateStatus',cors(corsOptions), (req, res) => {
 
         const id = req.body.id;
         const status = req.body.status;
@@ -171,14 +175,14 @@ client.connect(err => {
 
     })
 
-    app.delete('/delete/:id', (req, res) => {
+    app.delete('/delete/:id',cors(corsOptions), (req, res) => {
         yachtsCollection.deleteOne({ _id: ObjectId(req.params.id) })
             .then(result => {
                 res.send(res.deletedCount > 0);
             })
     })
 
-    app.post('/addNewsLetter', (req, res) => {
+    app.post('/addNewsLetter',cors(corsOptions), (req, res) => {
         const email = req.body;
         newsLetterCollection.insertOne(email)
             .then(result => {
@@ -186,7 +190,7 @@ client.connect(err => {
             })
     })
 
-    app.post('/addContact', (req, res) => {
+    app.post('/addContact',cors(corsOptions), (req, res) => {
         const data = req.body;
         addContactCollection.insertOne(data)
             .then(result => {
@@ -194,7 +198,7 @@ client.connect(err => {
             })
     })
 
-    app.post('/addAdmin', (req, res) => {
+    app.post('/addAdmin',cors(corsOptions), (req, res) => {
         const email = req.body;
         adminCollection.insertOne(email)
             .then(result => {
@@ -202,7 +206,7 @@ client.connect(err => {
             })
     })
 
-    app.get('/admins', (req, res) => {
+    app.get('/admins',cors(corsOptions), (req, res) => {
         adminCollection.find({})
             .toArray((err, documents) => {
                 res.send(documents);
@@ -213,7 +217,7 @@ client.connect(err => {
 
 
 
-app.get('/', (req, res) => {
+app.get('/',cors(corsOptions), (req, res) => {
     res.send('Db Working');
 })
 
